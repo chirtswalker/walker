@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trái tim đang đập — Chirts</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --heart1:#ff4d6d;
+      --heart2:#ff8fb3;
+      --glow: 0 10px 30px rgba(255,77,109,0.18);
+      --size:clamp(160px,30vmin,320px);
+      --beat-speed: 1s;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      display:grid;
+      place-items:center;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      background: radial-gradient(ellipse at 10% 10%, #071228 0%, var(--bg) 40%);
+      color:#fff;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .stage{
+      width:100%;
+      max-width:900px;
+      padding:24px;
+      display:flex;
+      gap:28px;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+    }
+
+    .heart-wrap{
+      width:var(--size);
+      height:var(--size);
+      display:grid;
+      place-items:center;
+      position:relative;
+    }
+
+    .heart{
+      width:80%;
+      height:80%;
+      filter:drop-shadow(0 6px 18px rgba(0,0,0,0.45));
+      transform-origin:center center;
+      animation:beat var(--beat-speed) ease-in-out infinite;
+      cursor:pointer;
+    }
+
+    .glow{
+      position:absolute;
+      width:70%;
+      height:70%;
+      border-radius:50%;
+      background: radial-gradient(circle at 50% 40%, rgba(255,140,179,0.28), rgba(255,77,109,0.06) 30%, transparent 60%);
+      filter: blur(16px);
+      pointer-events:none;
+      transition:opacity .25s;
+    }
+
+    .sparks{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      overflow:visible;
+    }
+    .spark{
+      position:absolute;
+      width:6px;height:6px;border-radius:50%;
+      background:var(--heart2);
+      opacity:0.9;transform:translate(-50%,-50%) scale(0.85);
+      animation:float 3s linear infinite;
+      mix-blend-mode:screen;
+      box-shadow:0 4px 14px rgba(255,140,179,0.12);
+    }
+
+    .controls{
+      display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:6px
+    }
+    .controls label{font-size:14px;color:#cbd5e1}
+    .range, .color{appearance:none;height:10px;border-radius:999px}
+    .btn{
+      background:transparent;border:1px solid rgba(255,255,255,0.08);padding:8px 12px;border-radius:10px;color:#fff;cursor:pointer;font-weight:600
+    }
+
+    @keyframes beat{
+      0%{transform:scale(1)}
+      8%{transform:scale(1.15)}
+      18%{transform:scale(0.95)}
+      30%{transform:scale(1.08)}
+      45%{transform:scale(1)}
+      100%{transform:scale(1)}
+    }
+    @keyframes float{
+      0%{transform:translate(-50%,-50%) translateY(0) scale(0.9);opacity:0.9}
+      50%{transform:translate(-50%,-50%) translateY(-22px) scale(1);opacity:0.45}
+      100%{transform:translate(-50%,-50%) translateY(0) scale(0.9);opacity:0.9}
+    }
+
+    @media (min-width:900px){
+      .stage{flex-direction:row}
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="heart-wrap">
+      <div class="glow" id="glow"></div>
+      <svg class="heart" viewBox="0 0 32 29" xmlns="http://www.w3.org/2000/svg" id="heartSvg" aria-label="Trái tim">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="var(--heart1)"/>
+            <stop offset="100%" stop-color="var(--heart2)"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#g1)" d="M23.6 0c-2.6 0-4.9 1.5-6.1 3.7C15.3 1.5 13 0 10.4 0 4.7 0 0 4.7 0 10.4 0 18.1 7 22.7 16 29c9-6.3 16-10.9 16-18.6C32 4.7 27.3 0 23.6 0z"/>
+      </svg>
+      <div class="sparks" id="sparks"></div>
+    </div>
+
+    <div style="max-width:380px; text-align:center">
+      <h2 style="margin:0 0 6px; font-size:20px">Trái tim đang đập — Chirts</h2>
+      <p style="margin:0 0 12px;color:#9aa7bf;font-size:13px">Nhấn vào trái tim để tắt/bật. Dùng thanh để thay đổi tốc độ và màu.</p>
+      <p style="margin-top:10px;">
+        <a href="https://chirts.vn" target="_blank" style="color:#ff8fb3; text-decoration:none; font-weight:600;">
+          🌸 Xem thêm tại Chirts.vn
+        </a>
+      </p>
+
+      <div class="controls">
+        <label>Speed</label>
+        <input class="range" id="speed" type="range" min="0.5" max="2.5" step="0.05" value="1" style="width:130px">
+        <label>Color</label>
+        <input class="color" id="color" type="color" value="#ff4d6d">
+        <button class="btn" id="random">Ngẫu nhiên</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const heart = document.getElementById('heartSvg');
+    const root = document.documentElement;
+    const speedInput = document.getElementById('speed');
+    const colorInput = document.getElementById('color');
+    const randomBtn = document.getElementById('random');
+    const sparks = document.getElementById('sparks');
+    const glow = document.getElementById('glow');
+
+    let playing = true;
+    heart.addEventListener('click', ()=>{
+      playing = !playing;
+      heart.style.animationPlayState = playing ? 'running' : 'paused';
+      sparks.style.opacity = playing ? '1' : '0.15';
+      glow.style.opacity = playing ? '1' : '0.2';
+    });
+
+    speedInput.addEventListener('input', (e)=>{
+      const v = e.target.value;
+      root.style.setProperty('--beat-speed', v + 's');
+    });
+
+    function setColor(hex){
+      function lighten(hex, amt){
+        let c = hex.replace('#','');
+        const num = parseInt(c,16);
+        let r = (num >> 16) + amt;
+        let g = ((num >> 8) & 0x00FF) + amt;
+        let b = (num & 0x0000FF) + amt;
+        r = Math.max(0,Math.min(255,r));
+        g = Math.max(0,Math.min(255,g));
+        b = Math.max(0,Math.min(255,b));
+        return '#' + (r<<16 | g<<8 | b).toString(16).padStart(6,'0');
+      }
+      const lighter = lighten(hex,70);
+      root.style.setProperty('--heart1', hex);
+      root.style.setProperty('--heart2', lighter);
+      glow.style.background = `radial-gradient(circle at 50% 40%, ${hex}33, ${lighter}20 30%, transparent 60%)`;
+
+      const stops = heart.querySelectorAll('stop');
+      if(stops.length>=2){
+        stops[0].setAttribute('stop-color', hex);
+        stops[1].setAttribute('stop-color', lighter);
+      }
+    }
+    colorInput.addEventListener('input', (e)=> setColor(e.target.value));
+
+    randomBtn.addEventListener('click', ()=>{
+      const rand = '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');
+      colorInput.value = rand; setColor(rand);
+    });
+
+    function makeSparks(n=8){
+      sparks.innerHTML='';
+      const wrap = document.querySelector('.heart-wrap');
+      const w = wrap.clientWidth, h = wrap.clientHeight;
+      for(let i=0;i<n;i++){
+        const s = document.createElement('div');
+        s.className='spark';
+        const left = 15 + Math.random()*70;
+        const top = 10 + Math.random()*80;
+        s.style.left = left + '%';
+        s.style.top = top + '%';
+        s.style.animationDuration = (2.4 + Math.random()*1.8) + 's';
+        s.style.opacity = (0.6 + Math.random()*0.4);
+        s.style.transform = 'translate(-50%,-50%) scale(' + (0.7 + Math.random()*0.6) + ')';
+        sparks.appendChild(s);
+      }
+    }
+    makeSparks(10);
+
+    window.addEventListener('keydown', (e)=>{
+      if(e.code === 'Space'){
+        e.preventDefault(); heart.click();
+      }
+    });
+
+    setColor(colorInput.value);
+
+    let rto;
+    window.addEventListener('resize', ()=>{
+      clearTimeout(rto); rto = setTimeout(()=> makeSparks(10),200);
+    });
+  </script>
+</body>
+</html>
